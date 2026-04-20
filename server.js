@@ -2,9 +2,6 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI, Type } from '@google/genai';
-import dotenv from 'dotenv';
-
-dotenv.config({ path: 'master.env' });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +14,7 @@ app.use(express.static(path.join(__dirname, 'dist')));
 
 app.post('/api/insights', async (req, res) => {
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+        const ai = new GoogleGenAI({ apiKey: "AIzaSyDv5lL4Ellzqz32rU5Sy-ONQT_p4QiiWoM" });
         const details = req.body;
 
         const prompt = `
