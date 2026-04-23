@@ -32,7 +32,7 @@ jobs:
         uses: actions/configure-pages@v3
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v4
         with:
           path: './dist' # Voor Vite is de output standaard 'dist', voor statische HTML is dit vaak de root of een andere map
 
