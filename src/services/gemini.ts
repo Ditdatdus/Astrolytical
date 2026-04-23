@@ -23,7 +23,7 @@ export interface AstrologyInsights {
 
 export async function getAstrologyInsights(details: UserDetails): Promise<AstrologyInsights> {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error("Gemini API key is missing. Please set VITE_GEMINI_API_KEY.");
   }
