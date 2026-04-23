@@ -62,7 +62,7 @@ export async function getAstrologyInsights(details: UserDetails): Promise<Astrol
     7. conclusion: A formal conclusion that integrates the data from the four disciplines into a coherent, actionable summary tailored to the inquiry.
   `;
 
-  const url = \`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\${apiKey}\`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
   const requestBody = {
     contents: [
@@ -75,15 +75,15 @@ export async function getAstrologyInsights(details: UserDetails): Promise<Astrol
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: {
-        type: "OBJECT",
+        type: "object",
         properties: {
-          numerology: { type: "STRING", description: "Numerology analysis text" },
-          lifePathNumber: { type: "NUMBER", description: "The calculated Life Path number" },
-          westernAstrology: { type: "STRING", description: "Western astrology insights text" },
-          kpSystem: { type: "STRING", description: "Krishnamurthi Paddhati (KP) system analysis text" },
-          chineseAstrology: { type: "STRING", description: "Chinese astrology analysis text" },
-          chineseZodiacAnimal: { type: "STRING", description: "Emoji symbol for the Chinese Zodiac animal" },
-          conclusion: { type: "STRING", description: "Final synthesized conclusion text" }
+          numerology: { type: "string", description: "Numerology analysis text" },
+          lifePathNumber: { type: "number", description: "The calculated Life Path number" },
+          westernAstrology: { type: "string", description: "Western astrology insights text" },
+          kpSystem: { type: "string", description: "Krishnamurthi Paddhati (KP) system analysis text" },
+          chineseAstrology: { type: "string", description: "Chinese astrology analysis text" },
+          chineseZodiacAnimal: { type: "string", description: "Emoji symbol for the Chinese Zodiac animal" },
+          conclusion: { type: "string", description: "Final synthesized conclusion text" }
         },
         required: ["numerology", "lifePathNumber", "westernAstrology", "kpSystem", "chineseAstrology", "chineseZodiacAnimal", "conclusion"]
       }
@@ -103,13 +103,23 @@ export async function getAstrologyInsights(details: UserDetails): Promise<Astrol
     try {
       const errObj = await response.json();
       errMsg = errObj.error?.message || errMsg;
-    } catch (e) {
-      // Ignored
+    } catch (_e) {
+      // Could not parse error body; use generic message
     }
     throw new Error(errMsg);
   }
 
-  const responseData = await response.json();
+  interface GeminiResponse {
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{
+          text?: string;
+        }>;
+      };
+    }>;
+  }
+
+  const responseData = (await response.json()) as GeminiResponse;
   const textContent = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
   
   if (!textContent) {
