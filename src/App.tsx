@@ -290,7 +290,7 @@ export default function App() {
       });
       setInsights(result);
     } catch (err) {
-      setError(t.error);
+      setError(err instanceof Error ? err.message : t.error);
       console.error(err);
     } finally {
       setLoading(false);
