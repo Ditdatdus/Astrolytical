@@ -68,7 +68,17 @@ export async function getAstrologyInsights(details: UserDetails): Promise<Astrol
     messages: [
       {
         role: "system",
-        content: "You are a professional analyst specializing in Numerology, Western Astrology, the Krishnamurthi Paddhati (KP) system, and Chinese Astrology. You must respond with a JSON object matching the requested schema."
+        content: `You are a professional analyst specializing in Numerology, Western Astrology, the Krishnamurthi Paddhati (KP) system, and Chinese Astrology.
+You MUST respond with a raw JSON object containing EXACTLY these keys. Do NOT wrap values in nested objects or arrays. All values (except lifePathNumber which must be a number) MUST be plain text strings:
+{
+  "numerology": "(string) A detailed plain-text paragraph containing the numerology assessment. Do NOT use nested objects.",
+  "lifePathNumber": (number) The calculated Numerology Life Path number (1-9, 11, 22, or 33),
+  "westernAstrology": "(string) A detailed plain-text paragraph containing the Western Astrology interpretation. Do NOT use nested objects.",
+  "kpSystem": "(string) A detailed plain-text paragraph containing the KP system interpretation. Do NOT use nested objects.",
+  "chineseAstrology": "(string) A detailed plain-text paragraph containing the Chinese Astrology evaluation. Do NOT use nested objects.",
+  "chineseZodiacAnimal": "(string) Single emoji representing the Chinese Zodiac animal",
+  "conclusion": "(string) A detailed plain-text paragraph containing the synthesized conclusion. Do NOT use nested objects."
+}`
       },
       {
         role: "user",
@@ -116,5 +126,35 @@ export async function getAstrologyInsights(details: UserDetails): Promise<Astrol
     throw new Error("No valid response received from AI");
   }
 
-  return JSON.parse(textContent) as AstrologyInsights;
+  const parsed = JSON.parse(textContent) as any;
+
+  // Defensive parsing: ensure all expected string fields are strings
+  const stringFields: Array<keyof AstrologyInsights> = [
+    'numerology',
+    'westernAstrology',
+    'kpSystem',
+    'chineseAstrology',
+    'chineseZodiacAnimal',
+    'conclusion'
+  ];
+
+  for (const field of stringFields) {
+    if (parsed[field] && typeof parsed[field] === 'object') {
+      // If it's an object, convert it to a string representation
+      const obj = parsed[field];
+      parsed[field] = Object.entries(obj)
+        .map(([key, val]) => `${key}: ${typeof val === 'object' ? JSON.stringify(val) : val}`)
+        .join('\n');
+    } else if (parsed[field] === undefined || parsed[field] === null) {
+      parsed[field] = '';
+    } else {
+      parsed[field] = String(parsed[field]);
+    }
+  }
+
+  if (typeof parsed.lifePathNumber !== 'number') {
+    parsed.lifePathNumber = Number(parsed.lifePathNumber) || 0;
+  }
+
+  return parsed as AstrologyInsights;
 }
