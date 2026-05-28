@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getAstrologyInsights, UserDetails, AstrologyInsights } from './services/gemini';
+import { getAstrologyInsights, UserDetails, AstrologyInsights } from './services/groq';
 
 const translations: Record<string, any> = {
   English: {

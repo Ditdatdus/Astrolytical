@@ -22,14 +22,13 @@ export interface AstrologyInsights {
 }
 
 export async function getAstrologyInsights(details: UserDetails): Promise<AstrologyInsights> {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
   if (!apiKey) {
-    throw new Error("Gemini API key is missing. Please set VITE_GEMINI_API_KEY.");
+    throw new Error("Groq API key is missing. Please set VITE_GROQ_API_KEY.");
   }
 
   const prompt = `
-    You are a professional analyst specializing in Numerology, Western Astrology, the Krishnamurthi Paddhati (KP) system, and Chinese Astrology.
     Perform a systematic cross-disciplinary analysis for the following subject:
     
     Name: ${details.firstName} ${details.lastName}
@@ -62,38 +61,31 @@ export async function getAstrologyInsights(details: UserDetails): Promise<Astrol
     7. conclusion: A formal conclusion that integrates the data from the four disciplines into a coherent, actionable summary tailored to the inquiry.
   `;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const url = "https://api.groq.com/openai/v1/chat/completions";
 
   const requestBody = {
-    contents: [
+    model: "llama-3.3-70b-versatile",
+    messages: [
       {
-        parts: [
-          { text: prompt }
-        ]
+        role: "system",
+        content: "You are a professional analyst specializing in Numerology, Western Astrology, the Krishnamurthi Paddhati (KP) system, and Chinese Astrology. You must respond with a JSON object matching the requested schema."
+      },
+      {
+        role: "user",
+        content: prompt
       }
     ],
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: "object",
-        properties: {
-          numerology: { type: "string", description: "Numerology analysis text" },
-          lifePathNumber: { type: "number", description: "The calculated Life Path number" },
-          westernAstrology: { type: "string", description: "Western astrology insights text" },
-          kpSystem: { type: "string", description: "Krishnamurthi Paddhati (KP) system analysis text" },
-          chineseAstrology: { type: "string", description: "Chinese astrology analysis text" },
-          chineseZodiacAnimal: { type: "string", description: "Emoji symbol for the Chinese Zodiac animal" },
-          conclusion: { type: "string", description: "Final synthesized conclusion text" }
-        },
-        required: ["numerology", "lifePathNumber", "westernAstrology", "kpSystem", "chineseAstrology", "chineseZodiacAnimal", "conclusion"]
-      }
-    }
+    response_format: {
+      type: "json_object"
+    },
+    temperature: 0.2
   };
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify(requestBody),
   });
@@ -109,18 +101,16 @@ export async function getAstrologyInsights(details: UserDetails): Promise<Astrol
     throw new Error(errMsg);
   }
 
-  interface GeminiResponse {
-    candidates?: Array<{
-      content?: {
-        parts?: Array<{
-          text?: string;
-        }>;
+  interface GroqResponse {
+    choices?: Array<{
+      message?: {
+        content?: string;
       };
     }>;
   }
 
-  const responseData = (await response.json()) as GeminiResponse;
-  const textContent = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
+  const responseData = (await response.json()) as GroqResponse;
+  const textContent = responseData.choices?.[0]?.message?.content;
   
   if (!textContent) {
     throw new Error("No valid response received from AI");
